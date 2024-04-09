@@ -31,7 +31,7 @@ export class PodContext {
 
 export type TPodOptions<Services extends TServices> = {
   context?: PodContext
-  define(self: Pod<any>): Services;
+  services?: Services;
 }
 
 export type TServices = { [key: string]: Service<any, any> };
@@ -42,7 +42,7 @@ export class Pod<Services extends TServices> {
 
   constructor(options: TPodOptions<Services>) {
     this.context = options?.context || PodContext.create();
-    this.services = options.define(this);
+    this.services = options?.services || {} as Services;
   }
 
   static create<Services extends TServices>(options: TPodOptions<Services>) {

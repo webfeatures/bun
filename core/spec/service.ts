@@ -5,7 +5,7 @@ export type TFeatureInstances = Record<string, FeatureInstance<any, any, any, an
 
 export type TServiceOptions<Host extends string, FeatureInstances extends TFeatureInstances> = {
   host: Host;
-  define(self: Service<any, any>): FeatureInstances;
+  define?: (self: Service<any, any>) => FeatureInstances;
 }
 
 export class Service<Host extends string, FeatureInstances extends TFeatureInstances> {
@@ -14,18 +14,18 @@ export class Service<Host extends string, FeatureInstances extends TFeatureInsta
 
   constructor(public options: TServiceOptions<Host, FeatureInstances>) {
     this.host = options.host;
-    this.instances = options.define(this);
+    this.instances = options.define ? options.define(new Service({ host: this.host })) : {} as FeatureInstances;
   }
 
-  createInstance<Input extends TSchema, Output extends TSchema, Ctx extends TSchema, Name extends string, Host extends string>(options: Omit<TFeatureInstanceOptions<Input, Output, Ctx, Name, Host>, 'host'>) {
+  createFeatureInstance<Input extends TSchema, Output extends TSchema, Ctx extends TSchema, Name extends string, Host extends string>(options: Omit<TFeatureInstanceOptions<Input, Output, Ctx, Name, Host>, 'host'>) {
     return new FeatureInstance({
       ...options,
       host: this.host
     });
   }
 
-  exportInstance<Input extends TSchema, Output extends TSchema, Ctx extends TSchema, Name extends string, Host extends string>(options: Omit<TFeatureInstanceOptions<Input, Output, Ctx, Name, Host>, 'host'>) {
-    const instance = this.createInstance(options);
+  exportFeatureInstance<Input extends TSchema, Output extends TSchema, Ctx extends TSchema, Name extends string, Host extends string>(options: Omit<TFeatureInstanceOptions<Input, Output, Ctx, Name, Host>, 'host'>) {
+    const instance = this.createFeatureInstance(options);
     return instance.export();
   }
 
@@ -35,6 +35,10 @@ export class Service<Host extends string, FeatureInstances extends TFeatureInsta
 
   static create<Host extends string, FeatureInstances extends TFeatureInstances>(options: TServiceOptions<Host, FeatureInstances>) {
     return new Service(options);
+  }
+
+  static export<Host extends string, FeatureInstances extends TFeatureInstances>(options: TServiceOptions<Host, FeatureInstances>) {
+    return Service.create(options).export();
   }
 
   async execute<Name extends keyof FeatureInstances, Input extends FeatureInstances[Name]['feature']['input']>(payload: Omit<TFeatureExecutionPaylod<Name, Host, Input>, 'host'>) {

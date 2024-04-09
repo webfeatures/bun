@@ -10,11 +10,11 @@ const { AddTwoNumbers } = Feature.export({
   ctx: Type.Void(),
 });
 
-const service = Service.create({
+const { math } = Service.export({
   host: 'math',
   define(s) {
     return {
-      ...s.exportInstance({
+      ...s.exportFeatureInstance({
         feature: AddTwoNumbers,
         async handler(arg) {
           const { input } = arg;
@@ -25,15 +25,9 @@ const service = Service.create({
   }
 });
 
-const pod = Pod.create({
-  define() {
-    return {
-      math: service
-    }
-  }
-});
+const pod = Pod.create({ services: { math } });
 
-test("execute an instance", async () => {
+test("run AddTwoNumbers from a pod instance", async () => {
   const result = await pod.execute({ host: 'math', name: 'AddTwoNumbers', input: [1, 2] });
   expect(result.output).toBe(3);
 });
