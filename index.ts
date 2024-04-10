@@ -1,4 +1,5 @@
-export * from './core/spec/feature';
-export * from './core/model';
-export * from './core/registry';
-
+export * from './community/logic/base-context';
+export * from './core/feature';
+export * from './core/service';
+export * from './core/service-group';
+export * from './generated/service-group'

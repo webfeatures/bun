@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { Feature, Type } from './feature';
-import { Pod } from './pod';
 import { Service } from './service';
+import { ServiceGroup } from './service-group';
 
-const { AddTwoNumbers } = Feature.export({
+const contract = Feature.createContract({
   name: 'AddTwoNumbers',
   input: Type.Tuple([Type.Number(), Type.Number()]),
   output: Type.Number(),
@@ -12,10 +12,10 @@ const { AddTwoNumbers } = Feature.export({
 
 const { math } = Service.export({
   host: 'math',
-  define(s) {
+  adapters(s) {
     return {
-      ...s.exportFeatureInstance({
-        feature: AddTwoNumbers,
+      ...s.exportAdapter({
+        contract,
         async handler(arg) {
           const { input } = arg;
           arg.output = input[0] + input[1];
@@ -25,9 +25,14 @@ const { math } = Service.export({
   }
 });
 
-const pod = Pod.create({ services: { math } });
+const group = ServiceGroup.create({
+  name: 'group',
+  services() {
+    return { math };
+  }
+});
 
-test("run AddTwoNumbers from a pod instance", async () => {
-  const result = await pod.execute({ host: 'math', name: 'AddTwoNumbers', input: [1, 2] });
+test("run AddTwoNumbers from a group instance", async () => {
+  const result = await group.execute({ host: 'math', name: 'AddTwoNumbers', input: [1, 2] });
   expect(result.output).toBe(3);
 });

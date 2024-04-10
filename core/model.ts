@@ -1,39 +1,64 @@
 import { type Static, type TSchema } from '@sinclair/typebox';
+import { Value } from '@sinclair/typebox/value';
 
-export class Model<S extends TSchema, O extends Static<S>, C extends any> {
-  ref: string;
-  schema: S;
-  use: (data?: Static<S>) => C;
-  extend: (data: Static<S>) => O;
+export abstract class AbstractModel<Name, Schema, Type> {
+  abstract name: Name;
+  abstract schema: Schema;
 
-  constructor(model: {
-    ref: string;
-    schema: S;
-    use?: (data: Static<S>) => C;
-    extend?: (data: Static<S>) => O;
-  }) {
-    this.ref = model.ref;
-    this.schema = model.schema;
-    this.schema.$id = this.ref;
-    this.use = model.use?.bind(this) || ((data: any) => data);
-    this.extend = model.extend?.bind(this) || (() => ({} as O));
-  }
-
-  static create<S extends TSchema, O extends Static<S>, C extends any>(model: {
-    ref: string;
-    schema: S;
-    use?: (data: Static<S>) => C;
-    extend?: (data: Static<S>) => O;
-  }) {
-    return new Model<S, O, C>(model);
-  }
-
-  // type accessors
-  get __type(): Static<S> {
-    return null as any;
-  }
-
-  get __defined(): O {
-    return null as any;
-  }
+  abstract type(data: Type): Type;
+  abstract create(): any;
+  abstract parse(data: Type): Type;
+  abstract validate(data: Type): boolean;
+  abstract errors(data: Type): any;
 }
+
+export type TModelOptions<Name extends string, Schema extends TSchema> = {
+  name: Name;
+  schema: Schema;
+};
+
+export type ModelType<T> = T extends Model<infer Name, infer Schema, infer Type> ? Type : never;
+export type ModelSchema<T> = T extends Model<infer Name, infer Schema, infer Type> ? Schema : never;
+
+export class Model<Name extends string = string, Schema extends TSchema = TSchema, Type = Static<Schema>> implements AbstractModel<Name, Schema, Type> {
+  name: Name;
+  schema: Schema;
+
+  constructor(model: { name: Name; schema: Schema; }) {
+    this.name = model.name;
+    this.schema = model.schema;
+    this.schema.$id = this.name;
+  }
+
+  type(data: Type): Type {
+    return data;
+  };
+
+  create() {
+    return Value.Create(this.schema);
+  }
+
+  parse(data: Type) {
+    return Value.Cast(this.schema, data) as Type;
+  }
+
+  validate(data: Type) {
+    return Value.Check(this.schema, data);
+  }
+
+  errors(data: Type) {
+    return Value.Errors(this.schema, data);
+  }
+
+  export() {
+    return { [`M${this.name}`]: this } as { [K in `M${Name}`]: typeof this };
+  }
+
+  static create<Name extends string, Schema extends TSchema>(model: TModelOptions<Name, Schema>) {
+    return new Model(model);
+  }
+
+  static export<Name extends string, Schema extends TSchema>(model: TModelOptions<Name, Schema>) {
+    return Model.create(model).export();
+  }
+};

@@ -9,8 +9,12 @@
   "peerDependencies": {
     "typescript": "5.4.3"
   },
+  "scripts": {
+    "generate": "bun ./scripts/generate-service-group.ts"
+  },
   "dependencies": {
     "@sinclair/typebox": "0.32.20",
+    "destr": "^2.0.3",
     "hpagent": "1.2.0",
     "proxy-chain": "2.4.0",
     "undici": "6.11.1"

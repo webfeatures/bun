@@ -2,14 +2,14 @@ import { expect, test } from "bun:test";
 import { Feature, Type } from './feature';
 import { Service } from './service';
 
-const { AddTwoNumbers } = Feature.export({
+const addContract = Feature.createContract({
   name: 'AddTwoNumbers',
   input: Type.Tuple([Type.Number(), Type.Number()]),
   output: Type.Number(),
   ctx: Type.Void(),
 });
 
-const { SubtractTwoNumbers } = Feature.export({
+const subtractContract = Feature.createContract({
   name: 'SubtractTwoNumbers',
   input: Type.Tuple([Type.Number(), Type.Number()]),
   output: Type.Number(),
@@ -18,17 +18,17 @@ const { SubtractTwoNumbers } = Feature.export({
 
 const service = Service.create({
   host: 'math',
-  define(s) {
+  adapters(s) {
     return {
-      ...s.exportFeatureInstance({
-        feature: AddTwoNumbers,
+      ...s.exportAdapter({
+        contract: addContract,
         async handler(arg) {
           const { input } = arg;
           arg.output = input[0] + input[1];
         }
       }),
-      ...s.exportFeatureInstance({
-        feature: SubtractTwoNumbers,
+      ...s.exportAdapter({
+        contract: subtractContract,
         async handler(arg) {
           const { input } = arg;
           arg.output = input[0] - input[1];
