@@ -25,7 +25,6 @@ const { math } = Service.createNamedExport({
 });
 
 const group = ServiceGroup.create({
-  name: 'group',
   services: {
     math
   }

@@ -19,7 +19,7 @@ const { SubtractTwoNumbers } = FeatureContract.createNamedExport({
 });
 
 const service = Service.create({
-  host: 'math',
+  host: 'math.com',
   adapters: {
     ...FeatureAdapter.createNamedExport({
       contract: AddTwoNumbers,

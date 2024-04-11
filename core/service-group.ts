@@ -2,32 +2,24 @@ import type { FeatureAdapter, TFeatureAdapterExecutionPayload } from './feature-
 import type { ModelSchema } from './model';
 import type { Service } from './service';
 
-export type TServiceGroupOptions<Name extends string, Services extends TServices> = {
-  name: Name;
-  services?: Services;
+export type TServiceGroupOptions<Services extends TServices> = {
+  services: Services;
 }
 
-export type TServiceGroupCreateOptions<Name extends string, Services extends TServices> = {
-  name: Name;
-  services?: Services;
+export type TServiceGroupCreateOptions<Services extends TServices> = {
+  services: Services;
 }
 
 export type TServices = { [key: string]: Service<any, any> };
 
-export class ServiceGroup<Name extends string, Services extends TServices> {
-  name: Name;
+export class ServiceGroup<Services extends TServices> {
   services: Services;
 
-  constructor(options: TServiceGroupOptions<Name, Services>) {
-    this.name = options.name;
+  constructor(options: TServiceGroupOptions<Services>) {
     this.services = options?.services || {} as Services;
   }
 
-  asNamedExport(): { [K in `SG${Name}`]: typeof this } {
-    return { [`SG${this.name}`]: this } as { [K in `SG${Name}`]: typeof this };
-  }
-
-  static create<Name extends string, Services extends TServices>(options: TServiceGroupCreateOptions<Name, Services>) {
+  static create<Services extends TServices>(options: TServiceGroupCreateOptions<Services>) {
     return new ServiceGroup(options);
   }
 

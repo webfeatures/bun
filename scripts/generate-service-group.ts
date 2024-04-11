@@ -37,9 +37,8 @@ export const generateServiceGroup = () => {
   fs.appendFileSync(
     serviceGroupPath,
     `export const serviceGroup = ServiceGroup.create({
-  name: 'Community',
   services: {
-${indices.map((indice) => `    ...${indice}.export()`).join(',\n')}
+${indices.map((indice) => `    ...${indice}.asNamedExport()`).join(',\n')}
   }
 });`
   );
