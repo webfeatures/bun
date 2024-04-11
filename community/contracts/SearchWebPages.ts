@@ -1,7 +1,8 @@
-import { Feature, Type } from '../../core/feature';
+import { Type } from '@sinclair/typebox';
+import { FeatureContract } from '../../core';
 import { MBaseContext } from '../logic/base-context';
 
-export const { SearchWebPages } = Feature.exportContract({
+export const { SearchWebPages } = FeatureContract.createNamedExport({
   name: 'SearchWebPages',
   input: Type.Object({
     url: Type.String(),

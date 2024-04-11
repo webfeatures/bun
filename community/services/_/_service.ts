@@ -3,9 +3,7 @@ import { getTitle } from './getTitle';
 
 export default Service.create({
   host: '_',
-  adapters() {
-    return {
-      getTitle,
-    }
+  adapters: {
+    getTitle,
   }
 });

@@ -38,10 +38,8 @@ export const generateServiceGroup = () => {
     serviceGroupPath,
     `export const serviceGroup = ServiceGroup.create({
   name: 'Community',
-  services() {
-    return {
-${indices.map((indice) => `      ...${indice}.export()`).join(',\n')}
-    };
+  services: {
+${indices.map((indice) => `    ...${indice}.export()`).join(',\n')}
   }
 });`
   );

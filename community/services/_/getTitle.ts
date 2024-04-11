@@ -1,7 +1,7 @@
-import { Feature } from '../../../core/feature';
+import { FeatureAdapter } from '../../../core';
 import { GetTitle } from '../../contracts/GetTitle';
 
-export const { getTitle } = Feature.exportAdapter({
+export const { getTitle } = FeatureAdapter.createNamedExport({
   contract: GetTitle,
   async handler({ input, output, ctx }) {
     const { url } = input;

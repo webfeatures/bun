@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
-import { Feature, Type } from './feature';
+import { FeatureContract } from './feature-contract';
+import { Type } from '@sinclair/typebox';
 
-const contract = Feature.createContract({
+const contract = FeatureContract.create({
   name: 'AddTwoNumbers',
   input: Type.Tuple([Type.Number(), Type.Number()]),
   output: Type.Number(),

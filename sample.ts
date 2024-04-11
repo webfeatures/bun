@@ -5,7 +5,7 @@ const fetcher = new Fetcher();
 
 const result = await serviceGroup.execute({
   host: '_',
-  name: 'GetTitle',
+  name: 'getTitle',
   input: {
     url: 'https://www.google.com'
   },

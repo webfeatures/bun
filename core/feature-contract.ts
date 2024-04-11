@@ -1,6 +1,5 @@
 import { type TSchema } from '@sinclair/typebox';
 import { Model, type ModelType } from './model';
-export { Type } from '@sinclair/typebox';
 
 export type TFeatureContractOptions<
   Name extends string,
@@ -25,18 +24,6 @@ export type TFeatureAdapterHandler<
     output: ModelType<Output>,
     ctx: ModelType<Ctx>
   }) => Promise<void>;
-
-export type TFeatureAdapterOptions<
-  Name extends string,
-  InputSchema extends TSchema,
-  OutputSchema extends TSchema,
-  CtxSchema extends TSchema,
-  Host extends string> = {
-    host?: Host;
-    contract: FeatureContract<Name, InputSchema, OutputSchema, CtxSchema>;
-    handler: TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>;
-  }
-
 
 export type FeatureAdapterHandler<T> = T extends FeatureContract<infer Name, infer InputSchema, infer OutputSchema, infer CtxSchema> ? TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema> : never;
 
@@ -80,17 +67,16 @@ export class FeatureContract<
     return new FeatureContract(options);
   }
 
-  export(): { [K in Name]: typeof this } {
-    return { [this.name]: this } as { [K in Name]: typeof this };
-  }
-
-  static export<
+  static createNamedExport<
     Name extends string,
     InputSchema extends TSchema,
     OutputSchema extends TSchema,
     CtxSchema extends TSchema
   >(options: TFeatureContractOptions<Name, InputSchema, OutputSchema, CtxSchema>) {
-    const feature = new FeatureContract(options);
-    return feature.export();
+    return new FeatureContract(options).asNamedExport();
+  }
+
+  asNamedExport(): { [K in Name]: typeof this } {
+    return { [this.name]: this } as { [K in Name]: typeof this };
   }
 }

@@ -1,7 +1,8 @@
-import { Feature, Type } from '../../core/feature';
+import { Type } from '@sinclair/typebox';
+import { FeatureContract } from '../../core';
 import { MBaseContext } from '../logic/base-context';
 
-export const { GetTitle } = Feature.exportContract({
+export const { GetTitle } = FeatureContract.createNamedExport({
   name: 'GetTitle',
   input: Type.Object({
     url: Type.String(),
