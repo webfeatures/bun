@@ -1,13 +1,14 @@
-import type { Static, TSchema, TUndefined, TVoid } from '@sinclair/typebox';
+import type { Static, TSchema } from '@sinclair/typebox';
 import type { LowercaseFirstLetter } from '../community/types';
 import { FeatureContract, type TFeatureAdapterHandler } from './feature-contract';
-import type { Model, ModelSchema, ModelType } from './model';
+import type { Model, ModelType } from './model';
 
-export type TFeatureAdapterExecutionPayload<Name extends unknown, Host extends unknown, Input extends Model, Ctx extends Model> = {
+export type TFeatureAdapterExecutionPayload<Name extends unknown, Host extends unknown, Input extends Model, Output extends Model, Ctx extends Model> = {
   name: Name;
   host: Host;
   input: ModelType<Input>;
-} & (ModelSchema<Ctx> extends (TVoid | TUndefined) ? {} : { ctx: ModelType<Ctx> });
+  output?: ModelType<Output>;
+} & ModelType<Ctx>;
 
 export type TFeatureAdapterOptions<
   Name extends string,
@@ -15,7 +16,7 @@ export type TFeatureAdapterOptions<
   OutputSchema extends TSchema,
   CtxSchema extends TSchema> = {
     contract: FeatureContract<Name, InputSchema, OutputSchema, CtxSchema>;
-    handler: TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>;
+    handler: TFeatureAdapterHandler<InputSchema, OutputSchema, CtxSchema>;
     samples?: Static<InputSchema>[];
   }
 
@@ -29,7 +30,7 @@ export class FeatureAdapter<
   Ctx extends Model<any, any, any> = Model<`${Name}Ctx`, CtxSchema>
 > {
   contract: FeatureContract<Name, InputSchema, OutputSchema, CtxSchema>;
-  handler: TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>;
+  handler: TFeatureAdapterHandler<InputSchema, OutputSchema, CtxSchema>;
   samples: Static<InputSchema>[];
 
   constructor(options: TFeatureAdapterOptions<Name, InputSchema, OutputSchema, CtxSchema>) {
@@ -73,8 +74,8 @@ export class FeatureAdapter<
     for (const sample of samples) {
       try {
         // Have to force ctx to be of type Ctx because of the way the FeatureAdapter is defined
-        const result = await this.execute({ input: sample, ctx } as any);
-        await this.contract.testFn({ ...result, input: sample, ctx });
+        const result = await this.execute({ ...ctx, input: sample } as any);
+        await this.contract.testFn({ ...ctx, ...result, input: sample, });
       } catch (error) {
         throw new Error(`FeatureContract ${this.contract.name} failed test: ${error}`);
       }
@@ -86,11 +87,12 @@ export class FeatureAdapter<
     return { [lowercasedFirstLetter]: this } as { [K in LowercaseFirstLetter<Name>]: typeof this };
   }
 
-  async execute(payload: Omit<TFeatureAdapterExecutionPayload<Name, unknown, Input, Ctx>, 'name' | 'host'>): Promise<{ input: Static<InputSchema>, output: Static<OutputSchema>, errors: any[] }> {
-    const input = this.contract.input.parse(payload.input) as ModelType<Input>;
-    let output = this.contract.output.create() as ModelType<Output>;
-    const ctx = ('ctx' in payload ? this.contract.ctx.parse(payload.ctx) : undefined) as ModelType<Ctx>;
-    let arg = { input, output, ctx };
+  async execute(payload: Omit<TFeatureAdapterExecutionPayload<Name, unknown, Input, Output, Ctx>, 'name' | 'host'>): Promise<{ input: Static<InputSchema>, output: Static<OutputSchema>, errors: any[] }> {
+    let { input: payloadInput, output: payloadOutput, ...payloadCtx } = payload;
+    const input = Object.freeze(this.contract.input.parse(payloadInput)) as ModelType<Input>;
+    let output = this.contract.output.parse(payloadOutput) as ModelType<Output>;
+    const ctx = this.contract.ctx.parse(payloadCtx) as ModelType<Ctx>;
+    const arg = { ...ctx, input, output };
 
     try {
       await this.handler(arg);

@@ -1,4 +1,4 @@
-import { type TSchema } from '@sinclair/typebox';
+import { type Static, type TSchema } from '@sinclair/typebox';
 import { Model, type ModelType } from './model';
 
 export type TFeatureContractOptions<
@@ -14,17 +14,9 @@ export type TFeatureContractOptions<
   }
 
 export type TFeatureAdapterHandler<
-  Name extends string,
   InputSchema extends TSchema,
   OutputSchema extends TSchema,
-  CtxSchema extends TSchema,
-  Input = Model<`${Name}Input`, InputSchema>,
-  Output = Model<`${Name}Output`, OutputSchema>,
-  Ctx = Model<`${Name}Ctx`, CtxSchema>> = (arg: {
-    input: ModelType<Input>,
-    output: ModelType<Output>,
-    ctx: ModelType<Ctx>
-  }) => Promise<void>;
+  CtxSchema extends TSchema> = (arg: { input: Static<InputSchema>, output: Static<OutputSchema> } & Static<CtxSchema>) => Promise<void | never>;
 
 
 export type TFeatureContractTestFn<
@@ -38,12 +30,11 @@ export type TFeatureContractTestFn<
     input: ModelType<Input>,
     output: ModelType<Output>,
     errors?: any[],
-    ctx: ModelType<Ctx>
-  }) => Promise<void>;
+  } & ModelType<Ctx>) => Promise<void>;
 
-export type FeatureAdapterHandler<T> = T extends FeatureContract<infer Name, infer InputSchema, infer OutputSchema, infer CtxSchema> ? TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema> : never;
+export type FeatureAdapterHandler<T> = T extends FeatureContract<infer Name, infer InputSchema, infer OutputSchema, infer CtxSchema> ? TFeatureAdapterHandler<InputSchema, OutputSchema, CtxSchema> : never;
 
-export type FeatureAdapterHandlerArg<T> = T extends FeatureContract<infer Name, infer InputSchema, infer OutputSchema, infer CtxSchema> ? Parameters<TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>>[0] : never;
+export type FeatureAdapterHandlerArg<T> = T extends FeatureContract<infer Name, infer InputSchema, infer OutputSchema, infer CtxSchema> ? Parameters<TFeatureAdapterHandler<InputSchema, OutputSchema, CtxSchema>>[0] : never;
 
 export class FeatureContract<
   Name extends string,
@@ -68,11 +59,11 @@ export class FeatureContract<
     this.testFn = options?.testFn || (async () => { });
   }
 
-  defineHandlerArg(arg: Parameters<TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>>[0]) {
+  defineHandlerArg(arg: Parameters<TFeatureAdapterHandler<InputSchema, OutputSchema, CtxSchema>>[0]) {
     return arg;
   }
 
-  defineHandler(handler: TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>) {
+  defineHandler(handler: TFeatureAdapterHandler<InputSchema, OutputSchema, CtxSchema>) {
     return handler;
   }
 

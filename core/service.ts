@@ -37,7 +37,11 @@ export class Service<Host extends string, FeatureAdapters extends TFeatureAdapte
     return { [this.host]: this } as { [K in Host]: typeof this };
   }
 
-  async execute<Name extends keyof FeatureAdapters, Input extends FeatureAdapters[Name]['contract']['input'], Ctx extends FeatureAdapters[Name]['contract']['ctx']>(payload: Omit<TFeatureAdapterExecutionPayload<Name, Host, Input, Ctx>, 'host'>) {
+  async execute<
+    Name extends keyof FeatureAdapters,
+    Input extends FeatureAdapters[Name]['contract']['input'],
+    Output extends FeatureAdapters[Name]['contract']['output'],
+    Ctx extends FeatureAdapters[Name]['contract']['ctx']>(payload: Omit<TFeatureAdapterExecutionPayload<Name, Host, Input, Output, Ctx>, 'host'>) {
     return this.adapters[payload.name].execute(payload);
   }
 };

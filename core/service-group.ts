@@ -39,7 +39,7 @@ export class ServiceGroup<Services extends TServices> {
     Input extends Service['adapters'][Name]['contract']['input'],
     Output extends Service['adapters'][Name]['contract']['output'],
     Ctx extends Service['adapters'][Name]['contract']['ctx']
-  >(payload: TFeatureAdapterExecutionPayload<Name, Host, Input, Ctx>) {
+  >(payload: TFeatureAdapterExecutionPayload<Name, Host, Input, Output, Ctx>) {
     const service = this.service(payload.host);
     const adapter = service.adapter(payload.name);
     return adapter.execute(payload) as ReturnType<FeatureAdapter<string, ModelSchema<Input>, ModelSchema<Output>, ModelSchema<Ctx>>['execute']>;

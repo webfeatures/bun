@@ -5,13 +5,12 @@ const fetcher = new Fetcher();
 
 const result = await serviceGroup.execute({
   host: '_',
-  name: 'getTitle',
+  name: 'countWords',
   input: {
-    url: 'https://www.google.com'
+    url: 'https://www.google.com',
+    words: ['google', 'hi', 'search']
   },
-  ctx: {
-    fetch: fetcher.fetch.bind(fetcher)
-  }
+  fetch: fetcher.fetch.bind(fetcher)
 })
 
 console.log(result.output);
