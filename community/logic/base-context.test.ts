@@ -13,7 +13,6 @@ const contract = FeatureContract.create({
 });
 
 const implementation = FeatureAdapter.create({
-  host: 'math',
   contract,
   async handler(arg) {
     arg.output = arg.ctx.add(arg.input[0], arg.input[1]);
@@ -21,6 +20,13 @@ const implementation = FeatureAdapter.create({
 });
 
 test("run AddTwoNumbers from a feature instance using a context", async () => {
-  const result = await implementation.execute({ input: [1, 2], ctx: { add(a, b) { return a + b } } });
+  const result = await implementation.execute({
+    input: [1, 2],
+    ctx: {
+      add(a, b) {
+        return a + b
+      }
+    }
+  });
   expect(result.output).toBe(3);
 });

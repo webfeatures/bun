@@ -23,6 +23,15 @@ export class ServiceGroup<Services extends TServices> {
     return new ServiceGroup(options);
   }
 
+  hosts<Host extends keyof Services>() {
+    return Object.keys(this.services) as Host[];
+  }
+
+  service<Host extends keyof Services>(host: Host): Services[Host] | never {
+    if (!this.services[host]) throw new Error(`Service ${host as string} not found`);
+    return this.services[host];
+  }
+
   async execute<
     Host extends keyof Services,
     Service extends Services[Host],
@@ -31,7 +40,8 @@ export class ServiceGroup<Services extends TServices> {
     Output extends Service['adapters'][Name]['contract']['output'],
     Ctx extends Service['adapters'][Name]['contract']['ctx']
   >(payload: TFeatureAdapterExecutionPayload<Name, Host, Input, Ctx>) {
-    const adapter = this.services[payload.host].adapters[payload.name];
+    const service = this.service(payload.host);
+    const adapter = service.adapter(payload.name);
     return adapter.execute(payload) as ReturnType<FeatureAdapter<string, ModelSchema<Input>, ModelSchema<Output>, ModelSchema<Ctx>>['execute']>;
   }
 }

@@ -10,6 +10,7 @@ export type TFeatureContractOptions<
     input: InputSchema,
     output: OutputSchema,
     ctx: CtxSchema
+    testFn?: TFeatureContractTestFn<Name, InputSchema, OutputSchema, CtxSchema>;
   }
 
 export type TFeatureAdapterHandler<
@@ -22,6 +23,21 @@ export type TFeatureAdapterHandler<
   Ctx = Model<`${Name}Ctx`, CtxSchema>> = (arg: {
     input: ModelType<Input>,
     output: ModelType<Output>,
+    ctx: ModelType<Ctx>
+  }) => Promise<void>;
+
+
+export type TFeatureContractTestFn<
+  Name extends string,
+  InputSchema extends TSchema,
+  OutputSchema extends TSchema,
+  CtxSchema extends TSchema,
+  Input = Model<`${Name}Input`, InputSchema>,
+  Output = Model<`${Name}Output`, OutputSchema>,
+  Ctx = Model<`${Name}Ctx`, CtxSchema>> = (arg: {
+    input: ModelType<Input>,
+    output: ModelType<Output>,
+    errors?: any[],
     ctx: ModelType<Ctx>
   }) => Promise<void>;
 
@@ -42,12 +58,14 @@ export class FeatureContract<
   input: Input;
   output: Output;
   ctx: Ctx;
+  testFn: TFeatureContractTestFn<Name, InputSchema, OutputSchema, CtxSchema>;
 
   constructor(options: TFeatureContractOptions<Name, InputSchema, OutputSchema, CtxSchema>) {
     this.name = options.name;
     this.input = Model.create({ name: `${this.name}Input`, schema: options.input }) as Input;
     this.output = Model.create({ name: `${this.name}Output`, schema: options.output }) as Output;
     this.ctx = Model.create({ name: `${this.name}Ctx`, schema: options.ctx }) as Ctx;
+    this.testFn = options?.testFn || (async () => { });
   }
 
   defineHandlerArg(arg: Parameters<TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>>[0]) {

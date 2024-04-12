@@ -16,6 +16,7 @@ export type TFeatureAdapterOptions<
   CtxSchema extends TSchema> = {
     contract: FeatureContract<Name, InputSchema, OutputSchema, CtxSchema>;
     handler: TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>;
+    samples?: Static<InputSchema>[];
   }
 
 export class FeatureAdapter<
@@ -29,10 +30,12 @@ export class FeatureAdapter<
 > {
   contract: FeatureContract<Name, InputSchema, OutputSchema, CtxSchema>;
   handler: TFeatureAdapterHandler<Name, InputSchema, OutputSchema, CtxSchema>;
+  samples: Static<InputSchema>[];
 
   constructor(options: TFeatureAdapterOptions<Name, InputSchema, OutputSchema, CtxSchema>) {
     this.contract = options.contract;
     this.handler = options.handler;
+    this.samples = options?.samples || [];
   }
 
   static for<
@@ -66,17 +69,23 @@ export class FeatureAdapter<
     return new FeatureAdapter(options).asNamedExport();
   }
 
+  async test(ctx?: ModelType<Ctx>, samples: Static<InputSchema>[] = this.samples) {
+    for (const sample of samples) {
+      try {
+        // Have to force ctx to be of type Ctx because of the way the FeatureAdapter is defined
+        const result = await this.execute({ input: sample, ctx } as any);
+        await this.contract.testFn({ ...result, input: sample, ctx });
+      } catch (error) {
+        throw new Error(`FeatureContract ${this.contract.name} failed test: ${error}`);
+      }
+    }
+  }
+
   asNamedExport(): { [K in LowercaseFirstLetter<Name>]: typeof this } {
     const lowercasedFirstLetter = this.contract.name.charAt(0).toLowerCase() + this.contract.name.slice(1);
     return { [lowercasedFirstLetter]: this } as { [K in LowercaseFirstLetter<Name>]: typeof this };
   }
 
-  clone(): FeatureAdapter<Name, InputSchema, OutputSchema, CtxSchema, Input, Output, Ctx> {
-    return new FeatureAdapter({
-      contract: this.contract,
-      handler: this.handler,
-    });
-  }
   async execute(payload: Omit<TFeatureAdapterExecutionPayload<Name, unknown, Input, Ctx>, 'name' | 'host'>): Promise<{ input: Static<InputSchema>, output: Static<OutputSchema>, errors: any[] }> {
     const input = this.contract.input.parse(payload.input) as ModelType<Input>;
     let output = this.contract.output.create() as ModelType<Output>;

@@ -16,6 +16,15 @@ export class Service<Host extends string, FeatureAdapters extends TFeatureAdapte
     this.adapters = options.adapters;
   }
 
+  names<Name extends keyof FeatureAdapters>() {
+    return Object.keys(this.adapters) as Name[];
+  }
+
+  adapter<Name extends keyof FeatureAdapters>(name: Name): FeatureAdapters[Name] | never {
+    if (!this.adapters[name]) throw new Error(`Adapter ${name as string} not found`);
+    return this.adapters[name];
+  }
+
   static create<Host extends string, FeatureAdapters extends TFeatureAdapters>(options: TServiceOptions<Host, FeatureAdapters>) {
     return new Service(options);
   }
